@@ -51,7 +51,7 @@ export class Reader {
             await okButton.waitFor()
             await this.browserPage.waitForTimeout(this.getSmallPeriodOfTime())
 
-            okButton.click({ delay: this.getClickTimePeriod() })
+            await okButton.click({ delay: this.getClickTimePeriod() })
             logger.info('Cookie consent closed successfully')
         } catch (error) {
             logger.warn(error, 'Cannot close cookie consent')
@@ -94,7 +94,6 @@ export class Reader {
         await this.closeCookieConsent()
         await this.initializePageCount()
 
-        await this.browserPage.waitForTimeout(100000)
         logger.info('Reader initialization complete')
     }
 
@@ -104,11 +103,13 @@ export class Reader {
 
     private get image() {
         if (this._counter <= this._pageCount) {
-            return this.main.locator(`*[data-page="${this._counter}"`).getByRole('img')
+            return this.main.locator(`*[data-page="${this._counter}"]`).getByRole('img')
         }
+        return undefined
     }
 
     private async nextPage() {
+        logger.info(`Moving to next page. Current counter: ${this._counter}, Total pages: ${this._pageCount}`)
         const image = this.image
 
         if (image) {
@@ -116,19 +117,32 @@ export class Reader {
                 await image.click()
             }
             this._counter++
+            logger.info(`Moved to page ${this._counter}`)
+        } else {
+            logger.info('No more pages to navigate')
         }
     }
 
     protected async readPage() {
-        const image = this.image
+        try {
+            logger.info(`Reading page ${this._counter} of ${this._pageCount}`)
+            const image = this.image
 
-        if (image) {
-            const buffer = image.screenshot()
-            await this.nextPage()
+            if (image) {
+                const buffer = await image.screenshot()
+                await this.nextPage()
 
-            return buffer
+                logger.info(`Page ${this._counter - 1} screenshot taken successfully`)
+
+                return buffer
+            } else {
+                logger.info('No more pages to read')
+                return undefined
+            }
+        } catch (error) {
+            logger.error(error, 'Error reading page')
+            throw error
         }
-
     }
 
     getStream(): ReadableStream {
@@ -137,20 +151,33 @@ export class Reader {
 
         return new ReadableStream({
             async start() {
+                logger.info('Stream start called')
+
                 await initialize()
+
+                logger.info('Stream initialized successfully')
             },
 
-            async pull(streamController) {
-                const buffer = await read()
+            async pull(controller) {
+                try {
+                    logger.info('Pulling next page from stream')
+                    const buffer = await read()
 
-                if (buffer) {
-                    streamController.enqueue()
-                } else {
-                    streamController.close()
+                    if (buffer) {
+                        controller.enqueue(buffer)
+
+                        logger.info('Page enqueued to stream')
+                    } else {
+                        controller.close()
+
+                        logger.info('Stream closed - no more pages')
+                    }
+                } catch (error) {
+                    logger.error(error, 'Error in stream pull')
+
+                    controller.error(error)
                 }
             }
         })
     }
 }
-
-
