@@ -1,7 +1,7 @@
 import { chromium } from 'playwright'
 import { Reader } from './readers/Reader'
 import { PdfRendererFactory } from './renderers/PdfRendererFactory'
-import { Writer } from './writers/Writer'
+import { PdfWriter } from './writers/PdfWriter'
 import logger from './logger'
 
 async function scrapeSPA(url: string): Promise<void> {
@@ -15,7 +15,7 @@ async function scrapeSPA(url: string): Promise<void> {
   try {
     const rendererFactory = new PdfRendererFactory()
     const reader = new Reader(url, browser, rendererFactory)
-    const writer = new Writer('test')
+    const writer = new PdfWriter('test')
 
     const readerStream = reader.getStream()
     const writerStream = writer.getStream()

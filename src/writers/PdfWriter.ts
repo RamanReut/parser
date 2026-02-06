@@ -6,7 +6,7 @@ import { IPdfRenderer } from '../renderers/renderer'
 
 const WIDTH = 1500
 
-export class Writer {
+export class PdfWriter {
     private content = new Array<IPdfRenderer>()
 
     constructor(protected filename: string) {}
