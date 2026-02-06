@@ -1,11 +1,12 @@
 import { ReadableStream } from 'node:stream/web'
 import { Browser, Page } from 'playwright'
 import logger from '../logger'
+import { IRendererFactory } from '../renderers/renderer'
 
 const cookieConsentContent = 'Мы используем файлы cookie, чтобы сайт работал лучше, оставаясь с нами вы соглашаетесь на такое использование'
 const cookieConsentOk = 'ОК'
 
-export class Reader {
+export class Reader<TRendererFactory extends IRendererFactory> {
     private _browserPage?: Page
     private _pageCount = 0
     private _counter = 1
@@ -22,7 +23,11 @@ export class Reader {
         this._browserPage = value
     }
 
-    constructor(protected url: string, protected browser: Browser) { }
+    constructor(
+        protected url: string,
+        protected browser: Browser,
+        protected rendererFactory: TRendererFactory
+    ) { }
 
     protected getRandomValueBetween(min: number, max: number): number {
         return Math.floor(Math.random() * (max - min + 1)) + min
@@ -98,7 +103,7 @@ export class Reader {
     }
 
     private get main() {
-        return this.browserPage.getByRole('main')    
+        return this.browserPage.getByRole('main')
     }
 
     private get image() {
@@ -110,17 +115,14 @@ export class Reader {
 
     private async nextPage() {
         logger.info(`Moving to next page. Current counter: ${this._counter}, Total pages: ${this._pageCount}`)
-        const image = this.image
 
-        if (image) {
-            if (this._counter < this._pageCount) {
-                await image.click()
-            }
-            this._counter++
+        if (this._counter < this._pageCount) {
+            await this.main.press('ArrowRight', { delay: this.getClickTimePeriod() })
             logger.info(`Moved to page ${this._counter}`)
         } else {
             logger.info('No more pages to navigate')
         }
+        this._counter++
     }
 
     protected async readPage() {
@@ -129,12 +131,14 @@ export class Reader {
             const image = this.image
 
             if (image) {
-                const buffer = await image.screenshot()
+                const size = await image.boundingBox()
+                const buffer = await image.screenshot({ type: 'png', scale: 'css' })
                 await this.nextPage()
+                await this.browserPage.waitForTimeout(this.getSmallPeriodOfTime())
 
                 logger.info(`Page ${this._counter - 1} screenshot taken successfully`)
 
-                return buffer
+                return this.rendererFactory.image(buffer).withSize(size?.width, size?.height)
             } else {
                 logger.info('No more pages to read')
                 return undefined

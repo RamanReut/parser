@@ -1,6 +1,8 @@
 import { chromium } from 'playwright'
 import { Reader } from './readers/Reader'
 import { Logger } from 'pino'
+import { PdfRendererFactory } from './renderers/PdfRendererFactory'
+import { Writer } from './writers/Writer'
 
 async function scrapeSPA(url: string): Promise<void> {
   console.log(`Starting scrape of ${url}`)
@@ -13,18 +15,16 @@ async function scrapeSPA(url: string): Promise<void> {
   
     
   try {
-    const reader = new Reader(url, browser)
+    const rendererFactory = new PdfRendererFactory()
+    const reader = new Reader(url, browser, rendererFactory)
+    const writer = new Writer('test')
     await reader.initialize()
-    
-    // Example: Extract title and content
 
-    // You can add more specific scraping logic here
-    // For example:
-    // const data = await page.evaluate(() => {
-    //   return Array.from(document.querySelectorAll('.item'))
-    //     .map(el => el.textContent)
-    // });
-    
+    const readerStream = reader.getStream()
+    const writerStream = writer.getStream()
+
+    await readerStream.pipeTo(writerStream)
+
     console.log('Scraping completed successfully')
   } catch (error) {
     console.error('Error during scraping:', error)
