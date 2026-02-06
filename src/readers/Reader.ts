@@ -6,6 +6,9 @@ import { IRendererFactory } from '../renderers/renderer'
 const cookieConsentContent = 'Мы используем файлы cookie, чтобы сайт работал лучше, оставаясь с нами вы соглашаетесь на такое использование'
 const cookieConsentOk = 'ОК'
 
+const WIDTH = 4096
+const HEIGHT = 2100
+
 export class Reader<TRendererFactory extends IRendererFactory> {
     private _browserPage?: Page
     private _pageCount = 0
@@ -68,6 +71,7 @@ export class Reader<TRendererFactory extends IRendererFactory> {
             logger.info('Opening page')
 
             this.browserPage = await this.browser.newPage()
+            await this.browserPage.setViewportSize({ width: WIDTH, height: HEIGHT })
             await this.browserPage.goto(this.url)
 
             logger.info('Page opened successfully')

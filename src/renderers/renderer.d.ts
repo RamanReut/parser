@@ -5,7 +5,8 @@ export interface IRenderer<T> {
 }
 
 export interface IImageRenderer<T> extends IRenderer<T> {
-    withSize(width: number, height: number): This
+    withSize(width: number, height: number): This,
+    withFrameWidth(maxWidth: number): This,
 }
 
 export type IPdfImageRenderer = IImageRenderer<ContentImage>

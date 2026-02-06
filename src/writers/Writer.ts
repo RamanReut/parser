@@ -1,7 +1,10 @@
 import { WritableStream } from 'node:stream/web'
+import { TDocumentDefinitions } from 'pdfmake/interfaces'
 import pdfmake from 'pdfmake'
 
 import { IPdfRenderer } from '../renderers/renderer'
+
+const WIDTH = 1500
 
 export class Writer {
     private content = new Array<IPdfRenderer>()
@@ -14,8 +17,10 @@ export class Writer {
 
     protected async flush() {
         const documentDefinitions = {
-            content: this.content.map(c => c.render())
-        }
+            content: this.content.map(c => c.withFrameWidth(WIDTH).render()),
+            pageSize: { width: WIDTH, height: 'auto' },
+            pageMargins: [0, 0, 0, 0]
+        } as TDocumentDefinitions
 
         await pdfmake.createPdf(documentDefinitions).write(`${this.filename}.pdf`)
     }

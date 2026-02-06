@@ -1,14 +1,28 @@
 import { ReadableStream } from 'node:stream/web'
 import { Reader } from './Reader'
-import { IPdfImageRenderer, IPdfRendererFactory } from '../renderers/renderer'
+import { IPdfRendererFactory } from '../renderers/renderer'
 
+const IMAGE_WIDTH = 100
+const IMAGE_HEIGHT = 200
 const MOCK_BUFFER = Buffer.from('test image buffer')
 const EXPECTED_CONTENT_IMAGE: any = {
-    buffer: MOCK_BUFFER
+    buffer: MOCK_BUFFER,
+    width: IMAGE_WIDTH,
+    height: IMAGE_HEIGHT
 }
 
 class MockRenderer {
+    width: number = 0
+    height: number = 0
+
     constructor(public buffer: Buffer) { }
+
+    withSize(width: number, height: number) {
+        this.width = width
+        this.height = height
+
+        return this
+    }
 }
 
 const mockRendererFactory = {
@@ -24,6 +38,8 @@ const mockPage = {
     count: jest.fn(),
     screenshot: jest.fn(),
     getByText: jest.fn(),
+    setViewportSize: jest.fn(),
+    boundingBox: jest.fn()
 } as any
 
 const mockBrowser = {
@@ -55,6 +71,7 @@ describe('Reader', () => {
         mockPage.getByText.mockReturnValue(mockPage)
         mockPage.press.mockResolvedValue(undefined)
         mockPage.screenshot.mockResolvedValue(MOCK_BUFFER)
+        mockPage.boundingBox.mockReturnValue({ x: 0, y: 0, width: IMAGE_WIDTH, height: IMAGE_HEIGHT })
     })
 
     afterEach(() => {
