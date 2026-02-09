@@ -1,5 +1,5 @@
 import { ContentImage } from 'pdfmake/interfaces'
-import { IImageRenderer } from './renderer'
+import { IImageRenderer } from '../types/renderer'
 
 export class PdfImageRenderer implements IImageRenderer<ContentImage> {
     private width: number = 0

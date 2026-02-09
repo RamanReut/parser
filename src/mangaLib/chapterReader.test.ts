@@ -1,6 +1,6 @@
 import { ReadableStream } from 'node:stream/web'
-import { Reader } from './Reader'
-import { IPdfRendererFactory } from '../renderers/renderer'
+import { Reader } from './chapterReader'
+import { IPdfRendererFactory } from '../types/renderer'
 
 const IMAGE_WIDTH = 100
 const IMAGE_HEIGHT = 200

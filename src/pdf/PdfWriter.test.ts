@@ -1,6 +1,6 @@
 import { WritableStream } from 'node:stream/web'
 import { PdfWriter } from './PdfWriter'
-import { IPdfRenderer } from '../renderers/renderer'
+import { IPdfRenderer } from '../types/renderer'
 import pdfmake from 'pdfmake'
 
 const writeMock = jest.fn()

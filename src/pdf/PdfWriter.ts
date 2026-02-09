@@ -2,7 +2,7 @@ import { WritableStream } from 'node:stream/web'
 import { TDocumentDefinitions } from 'pdfmake/interfaces'
 import pdfmake from 'pdfmake'
 
-import { IPdfRenderer } from '../renderers/renderer'
+import { IPdfRenderer } from '../types/renderer'
 
 const WIDTH = 1500
 

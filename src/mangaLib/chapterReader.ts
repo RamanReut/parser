@@ -1,7 +1,7 @@
 import { ReadableStream } from 'node:stream/web'
 import { Browser, Page } from 'playwright'
 import logger from '../logger'
-import { IRendererFactory } from '../renderers/renderer'
+import { IRendererFactory } from '../types/renderer'
 
 const cookieConsentContent = 'Мы используем файлы cookie, чтобы сайт работал лучше, оставаясь с нами вы соглашаетесь на такое использование'
 const cookieConsentOk = 'ОК'
