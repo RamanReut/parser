@@ -6,7 +6,7 @@ This is a manga scraping application that uses Playwright to navigate web pages 
 
 ```
 src/
-├── index.ts                 # Main application entry point
+├── main.ts                 # Main application entry point
 ├── logger.ts                # Logging configuration using pino
 ├── mangaLib/
 │   ├── chapterReader.ts     # Core scraping logic using Playwright
@@ -23,8 +23,8 @@ src/
 
 ## Key Components
 
-### 1. Main Application (index.ts)
-- Uses yargs for command line argument parsing
+### 1. Main Application (main.ts)
+- Exports `scrapeSPA` function for direct use in other modules
 - Supports `--visible-browser` (-v) flag to show browser during scraping
 - Supports `--output` (-o) flag to specify output file path
 - Default output is 'output.pdf'
@@ -67,16 +67,17 @@ npm run start -- https://example.com -v
 
 # Specify output file
 npm run start -- https://example.com -o result.pdf
-
-# Show help
-npm run start -- --help
 ```
 
 ## Testing
 
 The application includes comprehensive tests for all components:
 ```bash
-npm test
+# Run unit tests
+npm run test:unit
+
+# Run integration tests
+npm run test:integration
 ```
 
 Tests cover:
@@ -89,6 +90,7 @@ Tests cover:
 
 - **playwright**: Web scraping and browser automation
 - **pdfmake**: PDF generation
+- **pdf-lib**: Enhanced PDF manipulation and creation. Use only in tests
 - **yargs**: Command line argument parsing
 - **pino**: Logging
 - **jest**: Testing framework
@@ -99,7 +101,9 @@ Tests cover:
 ```bash
 npm run build    # Compile TypeScript to JavaScript
 npm run dev      # Run in development mode with watch
-npm run test     # Run all tests
+npm test         # Run all tests
+npm run test:unit # Run unit tests
+npm run test:integration # Run integration tests
 ```
 
 ## Configuration

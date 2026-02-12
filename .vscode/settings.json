@@ -1,5 +1,17 @@
 {
     "cSpell.words": [
         "pdfmake"
-    ]
+    ],
+    "jest.virtualFolders": [
+        {
+            "name": "unit",
+            "jestCommandLine": "npm run test:unit --",
+            "runMode": "watch"
+        },
+        {
+            "name": "integration",
+            "jestCommandLine": "npm run test:integration --",
+            "runMode": "on-demand"
+        },
+    ],
 }
