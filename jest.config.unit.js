@@ -9,5 +9,5 @@ module.exports = {
     ...tsJestTransformCfg,
   },
   transformIgnorePatterns: ['node_modules/(?!(yargs))'],
-  testMatch: ['**/src/**/*.test.ts']
+  testMatch: ['**/*.unit.test.ts']
 };

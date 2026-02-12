@@ -13,7 +13,9 @@
                 "ts-node/register"
             ],
             "args": [
-                "${workspaceFolder}/src/index.ts"
+                "${workspaceFolder}/src/index.ts",
+                "--",
+                "https://mangalib.me/ru/6435--kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen/read/v1/c1"
             ]
         }
     ]

@@ -1,47 +1,22 @@
 import { ReadableStream } from 'node:stream/web'
-import { Browser, Page } from 'playwright'
+import { Browser } from 'playwright'
 import logger from '../logger'
 import { IRendererFactory } from '../types/renderer'
+import { PageReader } from '../common/PageReader'
 
 const cookieConsentContent = 'Мы используем файлы cookie, чтобы сайт работал лучше, оставаясь с нами вы соглашаетесь на такое использование'
 const cookieConsentOk = 'ОК'
 
-const WIDTH = 4096
-const HEIGHT = 2100
-
-export class Reader<TRendererFactory extends IRendererFactory> {
-    private _browserPage?: Page
+export class MangaLibChapterReader<TRendererFactory extends IRendererFactory> extends PageReader {
     private _pageCount = 0
     private _counter = 1
 
-    protected get browserPage() {
-        if (this._browserPage) {
-            return this._browserPage
-        }
-
-        throw new Error('Page is not initialized')
-    }
-
-    protected set browserPage(value: Page) {
-        this._browserPage = value
-    }
-
     constructor(
-        protected url: string,
-        protected browser: Browser,
+        url: string,
+        browser: Browser,
         protected rendererFactory: TRendererFactory
-    ) { }
-
-    protected getRandomValueBetween(min: number, max: number): number {
-        return Math.floor(Math.random() * (max - min + 1)) + min
-    }
-
-    protected getSmallPeriodOfTime() {
-        return this.getRandomValueBetween(800, 2000)
-    }
-
-    protected getClickTimePeriod() {
-        return this.getRandomValueBetween(10, 100)
+    ) {
+        super(url, browser)
     }
 
     private async closeCookieConsent() {
@@ -63,21 +38,6 @@ export class Reader<TRendererFactory extends IRendererFactory> {
             logger.info('Cookie consent closed successfully')
         } catch (error) {
             logger.warn(error, 'Cannot close cookie consent')
-        }
-    }
-
-    private async openPage() {
-        try {
-            logger.info('Opening page')
-
-            this.browserPage = await this.browser.newPage()
-            await this.browserPage.setViewportSize({ width: WIDTH, height: HEIGHT })
-            await this.browserPage.goto(this.url)
-
-            logger.info('Page opened successfully')
-        } catch (error) {
-            logger.error(error, 'Cannot open page')
-            throw error
         }
     }
 

@@ -9,6 +9,6 @@ module.exports = {
     ...tsJestTransformCfg,
   },
   transformIgnorePatterns: ['node_modules/(?!(yargs))'],
-  testMatch: ['**/tests/integration/**/*.test.ts'],
+  testMatch: ['/**/*integration.test.ts'],
   testTimeout: 600000
 };

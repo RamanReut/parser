@@ -1,8 +1,9 @@
 import { chromium } from 'playwright'
-import { Reader } from './mangaLib/chapterReader'
+import { MangaLibChapterReader } from './mangaLib/chapterReader'
 import { PdfRendererFactory } from './pdf/PdfRendererFactory'
 import { PdfWriter } from './pdf/PdfWriter'
 import logger from './logger'
+
 async function scrapeSPA(
   url: string,
   visibleBrowser: boolean = false,
@@ -17,7 +18,7 @@ async function scrapeSPA(
 
   try {
     const rendererFactory = new PdfRendererFactory()
-    const reader = new Reader(url, browser, rendererFactory)
+    const reader = new MangaLibChapterReader(url, browser, rendererFactory)
     const writer = new PdfWriter(outputPath)
 
     const readerStream = reader.getStream()

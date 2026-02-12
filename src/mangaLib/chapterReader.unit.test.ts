@@ -1,5 +1,5 @@
 import { ReadableStream } from 'node:stream/web'
-import { Reader } from './chapterReader'
+import { MangaLibChapterReader } from './chapterReader'
 import { IPdfRendererFactory } from '../types/renderer'
 
 const IMAGE_WIDTH = 100
@@ -56,14 +56,14 @@ jest.mock('../logger', () => ({
 }))
 
 describe('Reader', () => {
-    let reader: Reader<IPdfRendererFactory>
+    let reader: MangaLibChapterReader<IPdfRendererFactory>
 
     beforeEach(() => {
         jest.clearAllMocks()
 
         mockRendererFactory.image.mockImplementation((buffer: Buffer) => new MockRenderer(buffer))
 
-        reader = new Reader('https://example.com', mockBrowser, mockRendererFactory)
+        reader = new MangaLibChapterReader('https://example.com', mockBrowser, mockRendererFactory)
         
         mockBrowser.newPage.mockResolvedValue(mockPage)
         mockPage.getByRole.mockReturnValue(mockPage)
