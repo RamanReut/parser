@@ -2,5 +2,6 @@ export type ChapterMetadata = {
     link: string,
     id: number,
     volumeId: number,
-    title: string
+    title: string,
+    titleName: string
 }

@@ -15,6 +15,7 @@ export class MangaLibTitleReader extends PageReader {
     private volumeIdCursor = 0
     // Sorted in reverse order
     private volumeAccumulator: ChapterMetadata[] = []
+    private titleName: string = ''
 
     private async closeCookieConsent() {
         try {
@@ -83,7 +84,13 @@ export class MangaLibTitleReader extends PageReader {
                     const [_1, id, _2, title] = textParseResult
                     const parsedId = parseFloat(id)
 
-                    return { link: `${URL_BASE}${link}`, id: parsedId, title, volumeId }
+                    return { 
+                        link: `${URL_BASE}${link}`, 
+                        id: parsedId, 
+                        title, 
+                        volumeId,
+                        titleName: this.titleName
+                    }
                 } else {
                     throw new Error('Cannot parse text from chapter title')
                 }
@@ -126,7 +133,7 @@ export class MangaLibTitleReader extends PageReader {
         this.volumeIdCursor++
     }
 
-    async read() {
+    protected async read() {
         if (!this.volumeAccumulator.length) {
             await this.loadVolumeChapters()
         }
@@ -134,11 +141,19 @@ export class MangaLibTitleReader extends PageReader {
         return this.volumeAccumulator.pop()
     }
 
+    protected async parseTitleName() {
+        const titleNode = await this.browserPage.getByRole('heading')
+        const title = await titleNode.innerText()
+
+        this.titleName = title
+    }
+
     async initialize() {
         logger.info('Starting reader initialization')
 
         await this.openPage()
         await this.closeCookieConsent()
+        await this.parseTitleName
         await this.initializeChapterList()
 
         logger.info('Reader initialization complete')
