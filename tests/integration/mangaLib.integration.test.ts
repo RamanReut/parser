@@ -29,7 +29,7 @@ afterAll(async () => {
 describe('Manga Reader Integration Tests', () => {
 
   describe('Manga Content Generation', () => {
-    const baseUrl = 'https://mangalib.me/ru/6435--kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen/read/v1/c1'
+    const baseUrl = 'https://mangalib.me/ru/manga/64302--one-day-my-lovely-ojou-chan-suddenly-became-a-cat-genshin-impact?'
     const defaultOutputFileName = 'site-test-output'
     const filenameWithPath = path.join(testOutputDir, `${defaultOutputFileName}`)
 

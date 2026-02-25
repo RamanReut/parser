@@ -5,7 +5,6 @@ export interface IRenderer<T> {
 }
 
 export interface IImageRenderer<T> extends IRenderer<T> {
-    withSize(width: number, height: number): This,
     withFrameWidth(maxWidth: number): This,
 }
 
@@ -13,8 +12,7 @@ export type IPdfImageRenderer = IImageRenderer<ContentImage>
 
 export type IPdfRenderer = IPdfImageRenderer
 
-export interface IRendererFactory<TImageRenderer = IImageRenderer> {
-    image(buffer: Buffer): TImageRenderer
-}
+// Removed factory interface as renderers are now instantiated directly
+export type IRendererFactory<TImageRenderer = IPdfImageRenderer> = never
 
 export type IPdfRendererFactory = IRendererFactory<IPdfImageRenderer> 

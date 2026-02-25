@@ -1,50 +1,16 @@
-import { ReadableStream } from 'node:stream/web'
-import { Browser } from 'playwright'
 import logger from '../logger'
-import { IRendererFactory } from '../types/renderer'
 import { PageReader } from '../common/PageReader'
+import { ImageArticle } from '../common/chapterPieces/ImageArticle'
 
-const cookieConsentContent = 'Мы используем файлы cookie, чтобы сайт работал лучше, оставаясь с нами вы соглашаетесь на такое использование'
-const cookieConsentOk = 'ОК'
-
-export class MangaLibChapterReader<TRendererFactory extends IRendererFactory> extends PageReader {
+export class MangaLibChapterReader extends PageReader {
     private _pageCount = 0
     private _counter = 1
-
-    constructor(
-        url: string,
-        browser: Browser,
-        protected rendererFactory: TRendererFactory
-    ) {
-        super(url, browser)
-    }
-
-    private async closeCookieConsent() {
-        try {
-            logger.info('Closing cookie consent start')
-
-            const okButton = this.browserPage
-                .locator('div', {
-                    hasText: cookieConsentContent,
-                    has: this.browserPage.locator('button').getByText(cookieConsentOk, { exact: false })
-                })
-                .getByRole('button')
-                .getByText(cookieConsentOk)
-
-            await okButton.waitFor()
-            await this.browserPage.waitForTimeout(this.getSmallPeriodOfTime())
-
-            await okButton.click({ delay: this.getClickTimePeriod() })
-            logger.info('Cookie consent closed successfully')
-        } catch (error) {
-            logger.warn(error, 'Cannot close cookie consent')
-        }
-    }
 
     private async initializePageCount() {
         try {
             logger.info('Initializing page count')
 
+            await this.browserPage.waitForTimeout(1000)
             const pages = this.browserPage.getByRole('main').locator('*[data-page]')
             this._pageCount = await pages.count()
 
@@ -60,7 +26,6 @@ export class MangaLibChapterReader<TRendererFactory extends IRendererFactory> ex
         logger.info('Starting reader initialization')
 
         await this.openPage()
-        await this.closeCookieConsent()
         await this.initializePageCount()
 
         logger.info('Reader initialization complete')
@@ -96,13 +61,13 @@ export class MangaLibChapterReader<TRendererFactory extends IRendererFactory> ex
 
             if (image) {
                 const size = await image.boundingBox()
-                const buffer = await image.screenshot({ type: 'png', scale: 'css' })
+                const buffer = await image.screenshot({ type: 'png', scale: 'css',  })
                 await this.nextPage()
                 await this.browserPage.waitForTimeout(this.getSmallPeriodOfTime())
 
                 logger.info(`Page ${this._counter - 1} screenshot taken successfully`)
 
-                return this.rendererFactory.image(buffer).withSize(size?.width, size?.height)
+                return new ImageArticle(buffer, size!.width, size!.height)
             } else {
                 logger.info('No more pages to read')
                 return undefined
@@ -113,39 +78,15 @@ export class MangaLibChapterReader<TRendererFactory extends IRendererFactory> ex
         }
     }
 
-    getStream(): ReadableStream {
-        const initialize = this.initialize.bind(this)
-        const read = this.readPage.bind(this)
+    async read() {
+        const buffer = []
 
-        return new ReadableStream({
-            async start() {
-                logger.info('Stream start called')
-
-                await initialize()
-
-                logger.info('Stream initialized successfully')
-            },
-
-            async pull(controller) {
-                try {
-                    logger.info('Pulling next page from stream')
-                    const buffer = await read()
-
-                    if (buffer) {
-                        controller.enqueue(buffer)
-
-                        logger.info('Page enqueued to stream')
-                    } else {
-                        controller.close()
-
-                        logger.info('Stream closed - no more pages')
-                    }
-                } catch (error) {
-                    logger.error(error, 'Error in stream pull')
-
-                    controller.error(error)
-                }
+        for (let page = await this.readPage(); page; page = await this.readPage()) {
+            if (page) {
+                buffer.push(page)
             }
-        })
+        }
+
+        return buffer
     }
 }

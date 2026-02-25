@@ -1,19 +1,18 @@
 import { ContentImage } from 'pdfmake/interfaces'
 import { IImageRenderer } from '../types/renderer'
+import { ImageArticle } from '../common/chapterPieces/ImageArticle'
 
 export class PdfImageRenderer implements IImageRenderer<ContentImage> {
-    private width: number = 0
-    private height: number = 0
     private frameWidth: number = 0
 
-    constructor(private buffer: Buffer) {}
+    constructor(private image: ImageArticle) { }
 
     private calculateSize() {
-        let width = this.width
-        let height = this.height
+        let width = this.image.width
+        let height = this.image.height
 
         if (this.frameWidth > 0) {
-            const ratio = this.width / this.height
+            const ratio = this.image.aspect
 
             width = this.frameWidth
             height = Math.floor(width / ratio)
@@ -28,17 +27,9 @@ export class PdfImageRenderer implements IImageRenderer<ContentImage> {
         return this
     }
 
-    withSize(width: number, height: number) {
-        this.width = width
-        this.height = height
-
-        return this
-    }
-
-
     render(): ContentImage { 
         return {
-            image: `data:image/png;base64,${this.buffer.toString('base64')}`,
+            image: `data:image/png;base64,${this.image.image.toString('base64')}`,
             ...this.calculateSize()
         }
     }

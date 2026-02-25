@@ -1,8 +1,9 @@
 import { PdfImageRenderer } from './PdfImageRenderer'
 import { IRendererFactory } from '../types/renderer'
+import { ChapterPiece } from '../common/chapterPieces/chapterPiece'
 
-export class PdfRendererFactory implements IRendererFactory<PdfImageRenderer> {
-    image(buffer: Buffer) {
-        return new PdfImageRenderer(buffer)
+export class PdfRendererFactory {
+    static getRenderer(piece: ChapterPiece) {
+        return new PdfImageRenderer(piece)
     }
 }
