@@ -13,7 +13,8 @@ const MOCK_CHAPTER_DATA = {
   metadata: {
     volumeId: 1,
     id: 2,
-    title: 'some_title'
+    title: 'chapter_name',
+    titleName: 'title_name'
   },
   data: [MOCK_IMAGE_ARTICLE]
 } as ChapterData
@@ -70,7 +71,7 @@ describe('PdfWriter', () => {
     await writerSink.write(MOCK_CHAPTER_DATA)
     await writerSink.close()
 
-    expect(writeMock).toHaveBeenCalledWith('test/1_2_some_title.pdf')
+    expect(writeMock).toHaveBeenCalledWith('test/title_name/1_2_chapter_name.pdf')
   })
 
   it('should handle multiple writes through WritableStream', async () => {
