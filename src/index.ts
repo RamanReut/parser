@@ -1,36 +1,47 @@
-import { chromium } from 'playwright'
+import { Browser, chromium } from 'playwright'
+import { MangaLibTitleReader } from './mangaLib/TitleReader'
+import { MangaLibChapterTransformer } from './mangaLib/chapterTransformer'
+import { PdfRendererFactory } from './pdf/PdfRendererFactory'
 import { PdfWriter } from './pdf/PdfWriter'
 import logger from './logger'
-import { getMangaLibReaderStream } from './mangaLib/readerFactory'
 
-async function scrapeSPA(
+export async function scrapeSPA(
   url: string,
-  visibleBrowser: boolean = false,
-  outputPath: string = 'output/output'
-): Promise<void> {
-  logger.info(`Starting scrape of ${url}`)
-  
-  const browser = await chromium.launch({ 
-    headless: !visibleBrowser,
-    chromiumSandbox: true
+  options: {
+    visibleBrowser?: boolean
+    output?: string
+  }
+) {
+  logger.info(`Starting SPA scraping for ${url}`)
+  const browser: Browser = await chromium.launch({
+    headless: !options.visibleBrowser,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
   })
 
   try {
-    const readerStream = getMangaLibReaderStream({ url, browser })
-    const writer = new PdfWriter(outputPath)
+    const readerFactory = (url: string, browser: Browser) => {
+      const titleReader = new MangaLibTitleReader(url, browser)
+      const reader = titleReader.getStream()
 
-    const writerStream = writer.getStream()
+      const chapterTransformer = new MangaLibChapterTransformer(browser)
+      const transformer = chapterTransformer.getStream()
 
-    await readerStream.pipeTo(writerStream)
+      return reader.pipeThrough(transformer)
+    }
 
-    logger.info('Scraping completed successfully')
+    const writer = new PdfWriter(options.output || 'output/output')
+
+    logger.info(`Starting pipeline execution for ${url}`)
+
+    await readerFactory(url, browser)
+      .pipeTo(writer.getStream())
+
+    logger.info(`Pipeline execution completed successfully for ${url}`)
   } catch (error) {
-    logger.error(error, 'Error during scraping')
+    logger.error(error, `Error during SPA scraping for ${url}`)
     throw error
   } finally {
     await browser.close()
+    logger.info(`Browser closed for ${url}`)
   }
 }
-
-export { scrapeSPA }
-

@@ -30,9 +30,9 @@ async function main() {
 
     await scrapeSPA(argv.url, argv['visible-browser'], argv.output)
 
-    logger.info('Scraping completed successfully')
+    logger.info(`Scraping completed successfully for ${argv.url}`)
   } catch (error) {
-    logger.error(error, 'Scraping failed')
+    logger.error(error, `Scraping failed for ${argv.url}`)
     process.exit(1)
   }
 }

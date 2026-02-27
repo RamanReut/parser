@@ -6,13 +6,16 @@ import { ChapterData } from '../common/ChapterData'
 import { PdfRendererFactory } from './PdfRendererFactory'
 import { ChapterMetadata } from '../common/ChapterMetadata'
 import { mkdir } from 'node:fs/promises'
+import logger from '../logger'
 
 const WIDTH = 1500
 
 export class PdfWriter {
     private outputFolderExist: boolean = false
 
-    constructor(protected outputPath: string) { }
+    constructor(protected outputPath: string) {
+        logger.info(`PdfWriter created with output path: ${this.outputPath}`)
+    }
 
     protected renderChapter(chapter: ChapterData) {
         return chapter.data.map(piece => {
@@ -35,6 +38,7 @@ export class PdfWriter {
             const outputDirectory = this.createDirectoryName(titleName)
             await mkdir(outputDirectory, { recursive: true })
             this.outputFolderExist = true
+            logger.info(`Output folder created: ${outputDirectory}`)
         }
     }
 
@@ -46,10 +50,14 @@ export class PdfWriter {
             pageMargins: [0, 0, 0, 0]
         } as TDocumentDefinitions
 
-        await pdfmake.createPdf(documentDefinitions).write(this.createFileName(content.metadata))
+        const fileName = this.createFileName(content.metadata)
+        logger.info(`Writing chapter to file: ${fileName}`)
+        await pdfmake.createPdf(documentDefinitions).write(fileName)
+        logger.info(`Chapter written successfully to file: ${fileName}`)
     }
 
     getStream(): WritableStream {
+        logger.info(`PdfWriter stream created`)
         const write = this.write.bind(this)
 
         return new WritableStream({
