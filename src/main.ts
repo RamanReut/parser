@@ -4,37 +4,40 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
 async function main() {
+  const argv = await yargs(hideBin(process.argv))
+    .option('visible-browser', {
+      alias: 'v',
+      type: 'boolean',
+      description: 'Show the browser during scraping',
+      default: false
+    })
+    .option('output', {
+      alias: 'o',
+      type: 'string',
+      description: 'Output directory path for generated PDFs',
+      default: 'output'
+    })
+    .positional('url', {
+      describe: 'URL to scrape',
+      type: 'string',
+      demandOption: true
+    })
+    .help()
+    .alias('help', 'h')
+    .epilog('Example: npm run start -- https://mangalib.me -v -o output/chapters')
+    .parse()
+
   try {
-    const argv = await yargs(hideBin(process.argv))
-      .option('visible-browser', {
-        alias: 'v',
-        type: 'boolean',
-        description: 'Show the browser during scraping',
-        default: false
-      })
-      .option('output', {
-        alias: 'o',
-        type: 'string',
-        description: 'Output file path',
-        default: 'output.pdf'
-      })
-      .positional('url', {
-        describe: 'URL to scrape',
-        type: 'string',
-        demandOption: true
-      })
-      .help()
-      .alias('help', 'h')
-      .epilog('Example: npm run start -- https://example.com -v -o result.pdf')
-      .parse()
-
-    await scrapeSPA(argv.url, argv['visible-browser'], argv.output)
-
+    await scrapeSPA(argv.url, {
+      visibleBrowser: argv['visible-browser'],
+      output: argv.output
+    })
     logger.info(`Scraping completed successfully for ${argv.url}`)
   } catch (error) {
-    logger.error(error, `Scraping failed for ${argv.url}`)
+    logger.error({ err: error }, `Scraping failed for ${argv.url}`)
     process.exit(1)
   }
 }
 
 main()
+

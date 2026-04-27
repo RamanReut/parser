@@ -1,8 +1,8 @@
 import logger from '../logger'
-import { PageReader } from '../common/PageReader'
 import { ImageArticle } from '../common/chapterPieces/ImageArticle'
+import { MangaLibPageReader } from './MangaLibPageReader'
 
-export class MangaLibChapterReader extends PageReader {
+export class MangaLibChapterReader extends MangaLibPageReader {
     private _pageCount = 0
     private _counter = 1
 
@@ -26,6 +26,7 @@ export class MangaLibChapterReader extends PageReader {
         logger.info(`Starting reader initialization for ${this.url}`)
 
         await this.openPage()
+        await this.closeCookieConsent()
         await this.initializePageCount()
 
         logger.info(`Reader initialization complete for ${this.url}`)
@@ -37,7 +38,9 @@ export class MangaLibChapterReader extends PageReader {
 
     private get image() {
         if (this._counter <= this._pageCount) {
-            return this.main.locator(`*[data-page="${this._counter}"]`).getByRole('img')
+            return this.main
+                .locator(`*[data-page="${this._counter}"]`)
+                .locator('img')
         }
         return undefined
     }
@@ -61,7 +64,11 @@ export class MangaLibChapterReader extends PageReader {
 
             if (image) {
                 const size = await image.boundingBox()
-                const buffer = await image.screenshot({ type: 'png', scale: 'css',  })
+                const buffer = await image.screenshot({
+                    type: 'jpeg',
+                    scale: 'css',
+                    quality: 75
+                })
                 await this.nextPage()
                 await this.browserPage.waitForTimeout(this.getSmallPeriodOfTime())
 
@@ -80,7 +87,6 @@ export class MangaLibChapterReader extends PageReader {
 
     async read() {
         const buffer = []
-        const url = this.url
 
         for (let page = await this.readPage(); page; page = await this.readPage()) {
             if (page) {

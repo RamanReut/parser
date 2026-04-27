@@ -29,7 +29,7 @@ export async function scrapeSPA(
       return reader.pipeThrough(transformer)
     }
 
-    const writer = new PdfWriter(options.output || 'output/output')
+    const writer = new PdfWriter(options.output || 'output')
 
     logger.info(`Starting pipeline execution for ${url}`)
 
@@ -45,3 +45,4 @@ export async function scrapeSPA(
     logger.info(`Browser closed for ${url}`)
   }
 }
+

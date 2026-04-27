@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { Browser, chromium } from 'playwright'
 import { MangaLibChapterReader } from './chapterReader'
 
@@ -21,5 +22,12 @@ it('mangaLib chapter reader', async () => {
     await reader.initialize()
     const result = await reader.read()
 
-    expect(result.map(x => ({...x, image: x.image.toString('base64')}))).toMatchSnapshot()
+    expect(result.map(x => {
+        const imageHash = createHash('sha256').update(x.image)
+
+        return {
+            ...x,
+            image: imageHash.digest('base64')
+        }
+    })).toMatchSnapshot()
 })

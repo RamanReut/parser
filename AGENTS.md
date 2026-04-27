@@ -1,15 +1,16 @@
 # Manga Scraper Application
 
-This is a manga scraping application that uses Playwright to navigate web pages and extract images, then converts them to a PDF using pdfmake.
+This is a manga scraping application that uses Playwright to navigate web pages and extract images, then converts them to PDFs using pdfmake.
 
 ## Project Structure
 
 ```
 src/
-├── index.ts                 # Main application entry point
+├── index.ts                 # Application entry point, exports scrapeSPA function
 ├── main.ts                  # CLI interface with yargs
 ├── logger.ts                # Logging configuration using pino
 ├── mangaLib/
+│   ├── MangaLibPageReader.ts # MangaLib-specific PageReader with cookie consent handling
 │   ├── chapterReader.ts     # Core scraping logic using Playwright
 │   ├── chapterReader.unit.test.ts # Unit tests for chapter reader
 │   ├── chapterReader.integration.test.ts # Integration tests for chapter reader
@@ -21,9 +22,9 @@ src/
 │   ├── PdfImageRenderer.ts  # Converts image buffers to PDF format
 │   ├── PdfImageRenderer.unit.test.ts # Unit tests for PDF image renderer
 │   ├── PdfRendererFactory.ts # Factory for creating PDF renderers
-│   └── PdfWriter.ts         # Writes PDF files using pdfmake
+│   └── PdfWriter.ts         # Writes individual PDF files using pdfmake
 ├── common/
-│   ├── PageReader.ts        # Base class for page readers with browser/page management
+│   ├── PageReader.ts        # Abstract base class for page readers with browser/page management
 │   ├── ChapterMetadata.ts   # Metadata for individual chapters
 │   ├── ChapterData.ts       # Type definition combining metadata and data
 │   └── chapterPieces/
@@ -41,26 +42,20 @@ tests/
 ### 1. Main Application (main.ts)
 - CLI interface using yargs
 - Supports `--visible-browser` (-v) flag to show browser during scraping
-- Supports `--output` (-o) flag to specify output file path
-- Default output is 'output/output' (followed by '.pdf' by PdfWriter)
+- Supports `--output` (-o) flag to specify output directory path
+- Default output is 'output' (PDFs are organized in subdirectories by title/volume)
 - Orchestrates the scraping process by calling scrapeSPA
 
 ### 2. Application Entry (index.ts)
 - Exports `scrapeSPA` function for direct use in other modules
-- Supports `--visible-browser` flag to show browser during scraping
-- Supports `--output` flag to specify output file path
-- Default output is 'output/output'
+- Accepts `options` object with `visibleBrowser` and `output` properties
 - Uses Playwright to launch Chromium browser
-- Initializes Reader, RendererFactory, and Writer components
+- Creates reader pipeline inline (TitleReader → ChapterTransformer → PdfWriter)
 - Implements stream pipeline using pipeTo for efficient data flow
+- Default output is 'output'
 
 ### 3. Pipeline Architecture
-- **Reader Factory (mangaLib/readerFactory.ts)**: Creates a pipeline of readers
-  - MangaLibTitleReader: Navigates to manga title page and extracts chapter metadata
-  - MangaLibChapterTransformer: Transforms chapter metadata into ChapterData with image data
-  - Uses TransformStream for seamless data transformation
-  
-- **Title Reader (mangaLib/TitleReader.ts)**: Extends PageReader base class
+- **Title Reader (mangaLib/TitleReader.ts)**: Extends MangaLibPageReader base class
   - Handles cookie consent dialogs
   - Navigates to chapter sections
   - Changes sort order (descending by chapter ID)
@@ -73,12 +68,16 @@ tests/
   - Uses MangaLibChapterReader for image extraction
   - Enqueues ChapterData objects to stream
   
-- **Chapter Reader (mangaLib/chapterReader.ts)**: Extends PageReader base class
+- **Chapter Reader (mangaLib/chapterReader.ts)**: Extends MangaLibPageReader base class
   - Uses Playwright to navigate chapter pages
   - Handles cookie consent dialogs
   - Extracts images from pages using data-page attributes
-  - Implements a ReadableStream for efficient data flow
+  - Implements ReadableStream for efficient data flow
   - Adds random delays to mimic human behavior
+
+- **Reader Factory (mangaLib/readerFactory.ts)**: Alternative factory for creating reader streams
+  - Creates pipeline of TitleReader and ChapterTransformer
+  - Can be used as an alternative to inline stream creation
 
 ### 4. Base Components
 - **PageReader (common/PageReader.ts)**: Abstract base class for all readers
@@ -86,6 +85,8 @@ tests/
   - Configures viewport size (4096x2100) for consistent image capture
   - Provides helper methods for random delays and timing
   - Ensures proper page initialization and cleanup
+  
+- **MangaLibPageReader (mangaLib/MangaLibPageReader.ts)**: MangaLib-specific PageReader
   
 - **ChapterData (common/ChapterData.ts)**: Combined data structure
   - Contains metadata (ChapterMetadata) and image data (ChapterPiece[])
@@ -98,7 +99,7 @@ tests/
 ### 5. PDF Renderer Components
 - **PdfRendererFactory**: Factory for creating PDF renderers
 - **PdfImageRenderer**: Converts image buffers to PDF format with sizing options
-- **PdfWriter**: Writes PDF files using pdfmake library
+- **PdfWriter**: Writes individual PDF files using pdfmake library
 
 ### 6. Types (types/renderer.d.ts)
 - Defines interfaces for renderers and factories
@@ -108,26 +109,27 @@ tests/
 
 1. **Web Scraping**: Uses Playwright to navigate SPA websites
 2. **Image Extraction**: Captures images from web pages
-3. **PDF Generation**: Converts extracted images to PDF format
+3. **PDF Generation**: Converts extracted images to individual PDF files
 4. **Browser Automation**: Supports both headless and visible browser modes
-5. **Error Handling**: Comprehensive error handling and logging
+5. **Error Handling**: Comprehensive error handling and structured logging
 6. **Testing**: Full test coverage for all components
 7. **Pipeline Processing**: Uses TransformStream and pipeTo for efficient data flow
 8. **Modular Architecture**: Separated concerns with factory pattern and base classes
 9. **Metadata Extraction**: Extracts chapter titles and IDs from source
 10. **Pagination**: Handles loading all chapters from a volume
+11. **Directory-based Output**: Organizes PDFs in subdirectories by title and volume
 
 ## Usage
 
 ```bash
 # Basic usage
-npm run start -- https://example.com
+npm run start -- https://mangalib.me
 
 # Show browser during scraping
-npm run start -- https://example.com -v
+npm run start -- https://mangalib.me -v
 
-# Specify output file
-npm run start -- https://example.com -o result.pdf
+# Specify output directory
+npm run start -- https://mangalib.me -o output/chapters
 ```
 
 ## Testing
@@ -176,7 +178,11 @@ The application uses a default viewport size of 4096x2100 pixels for consistent 
 
 ## Output Format
 
-The application generates PDF files with images arranged in the order they were scraped from the source website. Images are automatically scaled to fit within the specified page width while maintaining aspect ratio.
+The application generates multiple PDF files, one per chapter, organized in a directory structure:
+- Output directory is specified via `--output` flag (default: 'output')
+- PDFs are stored in `{output}/{titleName}/{volumeId}_{chapterId}_{title}.pdf`
+- Images within each PDF are arranged in the order they were scraped from the source website
+- Images are automatically scaled to fit within the specified page width while maintaining aspect ratio
 
 ## Architecture Highlights
 
@@ -188,4 +194,5 @@ The refactored architecture introduces several key improvements:
 4. **Modular Design**: Separated concerns between title navigation, chapter extraction, and data transformation
 5. **Type Safety**: Comprehensive TypeScript interfaces ensure type consistency across the pipeline
 6. **Stream-based Architecture**: Eliminates manual buffer management and enables efficient data flow
-```
+7. **Structured Error Logging**: Uses Pino's structured logging with `{ err: error }` for proper error serialization
+8. 

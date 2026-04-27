@@ -14,7 +14,7 @@ describe('PdfImageRenderer', () => {
         const result = renderer.render()
         
         expect(result).toHaveProperty('image')
-        expect(result.image).toMatch(/^data:image\/png;base64,/)
+        expect(result.image).toMatch(/^data:image\/jpeg;base64,/)
 
         const base64Data = result.image.split(',')[1]
         const decodedBuffer = Buffer.from(base64Data, 'base64')

@@ -1,43 +1,19 @@
 import logger from '../logger'
-import { PageReader } from '../common/PageReader'
 import { ChapterMetadata } from '../common/ChapterMetadata'
+import { MangaLibPageReader } from './MangaLibPageReader'
 
 const URL_BASE = 'https://mangalib.me'
 
-const cookieConsentContent = 'Мы используем файлы cookie, чтобы сайт работал лучше, оставаясь с нами вы соглашаетесь на такое использование'
-const cookieConsentOk = 'ОК'
 const chapterTabTitle = 'Главы'
 const sortOrderButtonTitle = 'Сортировать'
 const volumeTitle = 'Том'
 const chapterTitle = 'Глава'
 
-export class MangaLibTitleReader extends PageReader {
+export class MangaLibTitleReader extends MangaLibPageReader {
     private volumeIdCursor = 0
     // Sorted in reverse order
     private volumeAccumulator: ChapterMetadata[] = []
     private titleName: string = ''
-
-    private async closeCookieConsent() {
-        try {
-            logger.info(`Closing cookie consent start for ${this.url}`)
-
-            const okButton = this.browserPage
-                .locator('div', {
-                    hasText: cookieConsentContent,
-                    has: this.browserPage.locator('button').getByText(cookieConsentOk, { exact: false })
-                })
-                .getByRole('button', { name: cookieConsentOk, exact: true })
-            await okButton.waitFor()
-            await this.browserPage.waitForTimeout(this.getSmallPeriodOfTime())
-
-            await okButton.click({ delay: this.getClickTimePeriod() })
-
-            logger.info(`Cookie consent closed successfully for ${this.url}`)
-        } catch (error) {
-            logger.warn(error, `Cannot close cookie consent for ${this.url}`)
-            throw error
-        }
-    }
 
     private async openSectionPage() {
         const chapterTab = await this.browserPage.getByText(chapterTabTitle)
@@ -176,6 +152,7 @@ export class MangaLibTitleReader extends PageReader {
     protected async read() {
         if (!this.volumeAccumulator.length) {
             await this.loadVolumeChapters()
+            this.volumeIdCursor++
         }
 
         return this.volumeAccumulator.pop()
@@ -185,7 +162,8 @@ export class MangaLibTitleReader extends PageReader {
         try {
             logger.info(`Parsing title name for ${this.url}`)
 
-            const titleNode = await this.browserPage.getByRole('heading')
+            // Use more specific selector to target the main title heading (h1)
+            const titleNode = await this.browserPage.locator('h1')
             const title = await titleNode.innerText()
             this.titleName = title
 
@@ -212,7 +190,7 @@ export class MangaLibTitleReader extends PageReader {
         const initialize = this.initialize.bind(this)
         const read = this.read.bind(this)
 
-        return new ReadableStream({
+        return new ReadableStream<ChapterMetadata>({
             async start() {
                 logger.info(`Stream start called for ${url}`)
 
@@ -244,3 +222,4 @@ export class MangaLibTitleReader extends PageReader {
         })
     }
 }
+

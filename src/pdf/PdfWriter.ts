@@ -38,21 +38,26 @@ export class PdfWriter {
             const outputDirectory = this.createDirectoryName(titleName)
             await mkdir(outputDirectory, { recursive: true })
             this.outputFolderExist = true
+
             logger.info(`Output folder created: ${outputDirectory}`)
         }
     }
 
-    protected async write(content: ChapterData) {
-        await this.createDirectoryName(content.metadata.titleName)
+    protected async write(content: ChapterData) {        
+        const fileName = this.createFileName(content.metadata)
+
+        await this.createOutputFolder(content.metadata.titleName)
+
         const documentDefinitions = {
             content: this.renderChapter(content),
             pageSize: { width: WIDTH, height: 'auto' },
             pageMargins: [0, 0, 0, 0]
         } as TDocumentDefinitions
 
-        const fileName = this.createFileName(content.metadata)
         logger.info(`Writing chapter to file: ${fileName}`)
+
         await pdfmake.createPdf(documentDefinitions).write(fileName)
+
         logger.info(`Chapter written successfully to file: ${fileName}`)
     }
 

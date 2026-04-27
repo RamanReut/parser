@@ -29,7 +29,7 @@ export class PdfImageRenderer implements IImageRenderer<ContentImage> {
 
     render(): ContentImage { 
         return {
-            image: `data:image/png;base64,${this.image.image.toString('base64')}`,
+            image: `data:image/jpeg;base64,${this.image.image.toString('base64')}`,
             ...this.calculateSize()
         }
     }

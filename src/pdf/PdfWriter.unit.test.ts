@@ -97,7 +97,7 @@ describe('PdfWriter', () => {
     // @ts-expect-error for testing purposes
     const firstDocumentDefinitions = pdfmake.createPdf.mock.calls[0][0]
     expect(firstDocumentDefinitions.content[0]).toEqual({
-      image: `data:image/png;base64,${MOCK_BUFFER.toString('base64')}`,
+      image: `data:image/jpeg;base64,${MOCK_BUFFER.toString('base64')}`,
       width: WIDTH,
       height: 3000
     })
@@ -105,7 +105,7 @@ describe('PdfWriter', () => {
     // @ts-expect-error for testing purposes
     const secondDocumentDefinitions = pdfmake.createPdf.mock.calls[1][0]
     expect(secondDocumentDefinitions.content[0]).toEqual({
-      image: `data:image/png;base64,${secondImageArticle.image.toString('base64')}`,
+      image: `data:image/jpeg;base64,${secondImageArticle.image.toString('base64')}`,
       width: WIDTH,
       height: 3000
     })

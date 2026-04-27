@@ -20,7 +20,7 @@ export class MangaLibChapterTransformer {
     }
 
     getStream() {
-        return new TransformStream({
+        return new TransformStream<ChapterMetadata, ChapterData | undefined>({
             transform: this.transform.bind(this)
         })
     }
